@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Shuffler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="controls">
+        <label for="start-index">Start Index: </label>
+        <input type="number" id="start-index" value="0" min="0">
+        <label for="end-index">End Index: </label>
+        <input type="number" id="end-index" value="10" min="0">
+        <button onclick="shuffleWords()">Shuffle</button>
+        <button onclick="showMeanings()">Show Meanings</button>
+        <button onclick="hideMeanings()">Hide Meanings</button>
+    </div>
+    <table id="vocab-table">
+        <thead>
+            <tr>
+                <th>Word</th>
+                <th>Meaning</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word in words %}
+            <tr>
+                <td>{{ word.Word }}</td>
+                <td class="meaning hidden">{{ word.Meaning }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function shuffleWords() {
+            const startIndex = document.getElementById('start-index').value;
+            const endIndex = document.getElementById('end-index').value;
+            fetch('/shuffle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `start=${startIndex}&end=${endIndex}`,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    const tableBody = document.querySelector('#vocab-table tbody');
+                    tableBody.innerHTML = '';
+                    data.forEach(word => {
+                        const row = document.createElement('tr');
+                        const wordCell = document.createElement('td');
+                        const meaningCell = document.createElement('td');
+                        wordCell.textContent = word.Word;
+                        meaningCell.textContent = word.Meaning;
+                        meaningCell.classList.add('meaning', 'hidden');
+                        row.appendChild(wordCell);
+                        row.appendChild(meaningCell);
+                        tableBody.appendChild(row);
+                    });
+                }
+            });
+        }
+
+        function showMeanings() {
+            document.querySelectorAll('.meaning').forEach(cell => cell.classList.remove('hidden'));
+        }
+
+        function hideMeanings() {
+            document.querySelectorAll('.meaning').forEach(cell => cell.classList.add('hidden'));
+        }
+    </script>
+</body>
+</html>
